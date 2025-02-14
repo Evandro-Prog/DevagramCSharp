@@ -2,6 +2,6 @@
 {
     public class ChaveJWT
     {
-        public static string ChaveSecreta = "MinhaChaveSecretaDoDevagram2022";
+        public static string ChaveSecreta = "MinhaChaveSecretaDoDevagram2022Devaria";
     }
 }
