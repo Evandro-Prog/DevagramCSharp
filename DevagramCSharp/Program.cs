@@ -1,5 +1,7 @@
 using DevagramCSharp;
 using DevagramCSharp.Models;
+using DevagramCSharp.Repository;
+using DevagramCSharp.Repository.Impl;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -14,10 +16,14 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+//Conexão com banco de dados
 var connectionstring = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<DevagramContext>(option => option.UseSqlServer(connectionstring));
 
-var chaveCriptografia = Encoding.ASCII.GetBytes(ChaveJWT.ChaveSecreta);
+builder.Services.AddScoped<IUsuarioRepository, UsuarioRepositoryImpl>();
+
+//Criação da chave JWT
+var chaveCriptografia = Encoding.ASCII.GetBytes(ChaveJWT.ChaveSecreta); 
 builder.Services.AddAuthentication(auth =>
 {
     auth.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -36,6 +42,7 @@ builder.Services.AddAuthentication(auth =>
 });
 
 var app = builder.Build();
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
