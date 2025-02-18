@@ -1,6 +1,8 @@
 ﻿using DevagramCSharp.Dtos;
 using DevagramCSharp.Models;
+using DevagramCSharp.Repository;
 using DevagramCSharp.Services;
+using DevagramCSharp.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
@@ -13,10 +15,12 @@ namespace DevagramCSharp.Controllers
     {
 
         private readonly ILogger<LoginController> _logger;
+        private readonly IUsuarioRepository _usuarioRepository;
 
-        public LoginController (ILogger<LoginController> logger)
+        public LoginController (ILogger<LoginController> logger, IUsuarioRepository usuarioRepository)
         {
             _logger = logger;
+            _usuarioRepository = usuarioRepository;
         }
 
         [HttpPost]
@@ -25,25 +29,17 @@ namespace DevagramCSharp.Controllers
         {
             try
             {
-               if (!string.IsNullOrEmpty(loginrequisicao.Senha) && !string.IsNullOrEmpty(loginrequisicao.Email) &&
-                    !string.IsNullOrWhiteSpace(loginrequisicao.Senha) && !string.IsNullOrWhiteSpace(loginrequisicao.Email))
+                if (!string.IsNullOrEmpty(loginrequisicao.Senha) && !string.IsNullOrEmpty(loginrequisicao.Email) &&
+                     !string.IsNullOrWhiteSpace(loginrequisicao.Senha) && !string.IsNullOrWhiteSpace(loginrequisicao.Email))
                 {
-                    string email = "evandro@evandro.com.br";
-                    string senha = "Senha1234@";
 
-                    if (loginrequisicao.Email == email && loginrequisicao.Senha == senha)
+                    Usuario usuario = _usuarioRepository.GetUsuarioPorLoginSenha(loginrequisicao.Email.ToLower(), MD5Utils.GerarHashMD5(loginrequisicao.Senha));
+
+                    if(usuario != null)
                     {
-
-                        Usuario usuario = new Usuario()
-                        {
-                            Email = loginrequisicao.Email,
-                            Id = 12,
-                            Nome = "Evandro Marques"
-                        };
-
                         return Ok(new LoginRespostaDto()
                         {
-                            Email = usuario.Email = email,
+                            Email = usuario.Email,
                             Nome = usuario.Nome,
                             Token = TokenService.CriarToken(usuario)
                         });
@@ -56,9 +52,11 @@ namespace DevagramCSharp.Controllers
                             Status = StatusCodes.Status400BadRequest
                         });
                     }
+                    
                 }
                 else
                 {
+
                     return BadRequest(new ErrorResponseDto()
                     {
                         Descricao = "Usuario não preencheu os dados corretamente",
@@ -69,7 +67,7 @@ namespace DevagramCSharp.Controllers
             catch (Exception ex)
             {
                 _logger.LogError("Ocorreu um erro no login: " + ex.Message);
-                return StatusCode(StatusCodes.Status500InternalServerError,  new ErrorResponseDto()
+                return StatusCode(StatusCodes.Status500InternalServerError, new ErrorResponseDto()
                 {
                     Descricao = "Ocorreu um erro ao realizar login.",
                     Status = StatusCodes.Status500InternalServerError

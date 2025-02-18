@@ -2,6 +2,7 @@
 	using DevagramCSharp.Models;
 using DevagramCSharp.Repository;
 using DevagramCSharp.Repository.Impl;
+using DevagramCSharp.Services;
 using Microsoft.AspNetCore.Authorization;
 	using Microsoft.AspNetCore.Mvc;
 
@@ -12,13 +13,12 @@ using Microsoft.AspNetCore.Authorization;
 		[Route("api/[controller]")]
 		public class UsuarioController : BaseController
 		{
-			public readonly ILogger<UsuarioController> _logger;
-			public readonly IUsuarioRepository _usuarioRepository;
+			public readonly ILogger<UsuarioController> _logger;			
 
-			public UsuarioController(ILogger<UsuarioController> logger, IUsuarioRepository usuarioRepository)
+			public UsuarioController(ILogger<UsuarioController> logger, 
+				IUsuarioRepository usuarioRepository) : base(usuarioRepository)
 			{
-				_logger = logger;
-				_usuarioRepository = usuarioRepository;
+				_logger = logger;				
 			}
 
 			[HttpGet]        
@@ -26,14 +26,14 @@ using Microsoft.AspNetCore.Authorization;
 			{
 				try
 				{
-					Usuario usuario = new Usuario()
-					{
-						Email = "evandro@evandro.com.br",
-						Nome = "Evandro",
-						Id = 12
-					};
 
-					return Ok(usuario);
+					Usuario usuario = ReadToken();
+
+					return Ok(new UsuarioRespostaDto
+					{
+						Nome = usuario.Nome,
+						Email = usuario.Email
+					});
 				}
 				catch (Exception ex)
 				{
@@ -47,64 +47,75 @@ using Microsoft.AspNetCore.Authorization;
 			}
 
 			[HttpPost]
-			public IActionResult SalvarUsuario([FromBody] Usuario usuario)
+			[AllowAnonymous]
+			public IActionResult SalvarUsuario([FromForm] UsuarioRequisicaoDto usuariodto)
 			{
 				try
 				{
 
-				if (usuario != null)
-				{
-					var erros = new List<string>();
-					if (string.IsNullOrEmpty(usuario.Nome) || string.IsNullOrWhiteSpace(usuario.Nome))
+					if (usuariodto != null)
 					{
-						erros.Add("Nome inválido");
-					}
-					if (string.IsNullOrEmpty(usuario.Email) || string.IsNullOrWhiteSpace(usuario.Email) || !usuario.Email.Contains("@"))
-					{
-						erros.Add("Email inválido");
-					}
-					if (string.IsNullOrEmpty(usuario.Nome) || string.IsNullOrWhiteSpace(usuario.Nome))
-					{
-						erros.Add("Nome inválido");
-					}
-
-					if (erros.Count > 0)
-					{
-						return BadRequest(new ErrorResponseDto()
+						var erros = new List<string>();
+						if (string.IsNullOrEmpty(usuariodto.Nome) || string.IsNullOrWhiteSpace(usuariodto.Nome))
 						{
-							Status = StatusCodes.Status400BadRequest,
-							Erros = erros
-						});
-					}
-
-					//criptografia de senha
-					usuario.Senha = Utils.MD5Utils.GerarHashMD5(usuario.Senha);
-					usuario.Email = usuario.Email.ToLower();
-
-					if (!_usuarioRepository.VerificarEmail(usuario.Email))
-					{
-						_usuarioRepository.Salvar(usuario);
-					}
-					else
-					{
-						return BadRequest(new ErrorResponseDto()
+							erros.Add("Nome inválido");
+						}
+						if (string.IsNullOrEmpty(usuariodto.Email) || string.IsNullOrWhiteSpace(usuariodto.Email) || !usuariodto.Email.Contains("@"))
 						{
-							Status = StatusCodes.Status400BadRequest,
-							Descricao = "Usuário já cadastrado."
-						});
-					}
-				}
+							erros.Add("Email inválido");
+						}
+						if (string.IsNullOrEmpty(usuariodto.Nome) || string.IsNullOrWhiteSpace(usuariodto.Nome))
+						{
+							erros.Add("Nome inválido");
+						}
 
-				 return Ok(usuario);
-				}
+						if (erros.Count > 0)
+						{
+							return BadRequest(new ErrorResponseDto()
+							{
+								Status = StatusCodes.Status400BadRequest,
+								Erros = erros
+							});
+						}
+
+					CosmicService  cosmicservice = new CosmicService();
+
+					Usuario usuario = new Usuario()
+					{
+						Email = usuariodto.Email,
+						Senha = usuariodto.Senha,
+						Nome = usuariodto.Nome,
+						FotoPerfil = cosmicservice.EnviarImagem(new ImagemDto {Imagem = usuariodto.FotoPerfil, Nome = usuariodto.Nome.Replace(" ","")})
+					};
+
+						//criptografia de senha
+						usuario.Senha = Utils.MD5Utils.GerarHashMD5(usuario.Senha);
+						usuario.Email = usuario.Email.ToLower();
+
+						if (!_usuarioRepository.VerificarEmail(usuario.Email))
+						{
+							_usuarioRepository.Salvar(usuario);
+						}
+						else
+						{
+							return BadRequest(new ErrorResponseDto()
+							{
+								Status = StatusCodes.Status400BadRequest,
+								Descricao = "Usuário já cadastrado."
+							});
+						}
+					}
+
+					 return Ok("Usuário cadastrado!");
+					}
 				     catch (Exception ex)
-				{
-					_logger.LogError("Erro ao salvar usuário");
-					return StatusCode(StatusCodes.Status500InternalServerError, new ErrorResponseDto()
 					{
-						Descricao = "Ocorreu o seguinte erro:" + ex.Message,
-						Status = StatusCodes.Status500InternalServerError
-					});
+						_logger.LogError("Erro ao salvar usuário");
+						return StatusCode(StatusCodes.Status500InternalServerError, new ErrorResponseDto()
+						{
+							Descricao = "Ocorreu o seguinte erro:" + ex.Message,
+							Status = StatusCodes.Status500InternalServerError
+						});
 				}				
 
 			}
