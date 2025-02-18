@@ -52,38 +52,52 @@ using Microsoft.AspNetCore.Authorization;
 				try
 				{
 
-					if(usuario != null)
+				if (usuario != null)
+				{
+					var erros = new List<string>();
+					if (string.IsNullOrEmpty(usuario.Nome) || string.IsNullOrWhiteSpace(usuario.Nome))
 					{
-						var erros = new List<string>();
-						if(string.IsNullOrEmpty(usuario.Nome) || string.IsNullOrWhiteSpace(usuario.Nome))
-						{
-							erros.Add("Nome inválido");
-						}                                       
-						if (string.IsNullOrEmpty(usuario.Email) || string.IsNullOrWhiteSpace(usuario.Email) || !usuario.Email.Contains("@"))
-						{
-							erros.Add("Email inválido");
-						}                        
-						if (string.IsNullOrEmpty(usuario.Nome) || string.IsNullOrWhiteSpace(usuario.Nome))
-						{
-							erros.Add("Nome inválido");
-						}
+						erros.Add("Nome inválido");
+					}
+					if (string.IsNullOrEmpty(usuario.Email) || string.IsNullOrWhiteSpace(usuario.Email) || !usuario.Email.Contains("@"))
+					{
+						erros.Add("Email inválido");
+					}
+					if (string.IsNullOrEmpty(usuario.Nome) || string.IsNullOrWhiteSpace(usuario.Nome))
+					{
+						erros.Add("Nome inválido");
+					}
 
-						if(erros.Count > 0)
+					if (erros.Count > 0)
+					{
+						return BadRequest(new ErrorResponseDto()
 						{
-							return BadRequest(new ErrorResponseDto()
-							{
-								Status = StatusCodes.Status400BadRequest,
-								Erros = erros
-							});
-						}
+							Status = StatusCodes.Status400BadRequest,
+							Erros = erros
+						});
+					}
 
-						 _usuarioRepository.Salvar(usuario);
+					//criptografia de senha
+					usuario.Senha = Utils.MD5Utils.GerarHashMD5(usuario.Senha);
+					usuario.Email = usuario.Email.ToLower();
 
-					}   
-
-					return Ok(usuario);
+					if (!_usuarioRepository.VerificarEmail(usuario.Email))
+					{
+						_usuarioRepository.Salvar(usuario);
+					}
+					else
+					{
+						return BadRequest(new ErrorResponseDto()
+						{
+							Status = StatusCodes.Status400BadRequest,
+							Descricao = "Usuário já cadastrado."
+						});
+					}
 				}
-				catch (Exception ex)
+
+				 return Ok(usuario);
+				}
+				     catch (Exception ex)
 				{
 					_logger.LogError("Erro ao salvar usuário");
 					return StatusCode(StatusCodes.Status500InternalServerError, new ErrorResponseDto()
