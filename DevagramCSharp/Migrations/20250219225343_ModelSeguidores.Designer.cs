@@ -3,6 +3,7 @@ using DevagramCSharp.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DevagramCSharp.Migrations
 {
     [DbContext(typeof(DevagramContext))]
-    partial class DevagramContextModelSnapshot : ModelSnapshot
+    [Migration("20250219225343_ModelSeguidores")]
+    partial class ModelSeguidores
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -20,29 +23,6 @@ namespace DevagramCSharp.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("DevagramCSharp.Models.Seguidor", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("IdUsuarioSeguido")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("IdUsuarioSeguidor")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("IdUsuarioSeguido");
-
-                    b.HasIndex("IdUsuarioSeguidor");
-
-                    b.ToTable("Seguidores");
-                });
 
             modelBuilder.Entity("DevagramCSharp.Models.Usuario", b =>
                 {
@@ -71,21 +51,6 @@ namespace DevagramCSharp.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Usuarios");
-                });
-
-            modelBuilder.Entity("DevagramCSharp.Models.Seguidor", b =>
-                {
-                    b.HasOne("DevagramCSharp.Models.Usuario", "UsuarioSeguido")
-                        .WithMany()
-                        .HasForeignKey("IdUsuarioSeguido");
-
-                    b.HasOne("DevagramCSharp.Models.Usuario", "UsuarioSeguidor")
-                        .WithMany()
-                        .HasForeignKey("IdUsuarioSeguidor");
-
-                    b.Navigation("UsuarioSeguido");
-
-                    b.Navigation("UsuarioSeguidor");
                 });
 #pragma warning restore 612, 618
         }

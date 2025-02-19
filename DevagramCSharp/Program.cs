@@ -21,6 +21,7 @@ var connectionstring = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<DevagramContext>(option => option.UseSqlServer(connectionstring));
 
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepositoryImpl>();
+builder.Services.AddScoped<ISeguidorRepository,  SeguidorRepositoryImpl>();
 
 //Criação da chave JWT
 var chaveCriptografia = Encoding.ASCII.GetBytes(ChaveJWT.ChaveSecreta); 
