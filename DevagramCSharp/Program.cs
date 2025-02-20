@@ -23,6 +23,8 @@ builder.Services.AddDbContext<DevagramContext>(option => option.UseSqlServer(con
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepositoryImpl>();
 builder.Services.AddScoped<ISeguidorRepository,  SeguidorRepositoryImpl>();
 builder.Services.AddScoped<IPublicacaoRepository, PublicacaorepositoryImpl>();
+builder.Services.AddScoped<IComentarioRepository, ComentarioRepositoryImpl>();
+
 
 //Criação da chave JWT
 var chaveCriptografia = Encoding.ASCII.GetBytes(ChaveJWT.ChaveSecreta); 
