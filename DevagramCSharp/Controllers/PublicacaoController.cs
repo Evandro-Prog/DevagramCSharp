@@ -12,11 +12,16 @@ namespace DevagramCSharp.Controllers
     {
         private readonly ILogger<PublicacaoController> _logger;
         private readonly IPublicacaoRepository _publicacaoRepository;
+        private readonly IComentarioRepository _comentarioRepository;
+        private readonly ICurtidaRepository _curtidaRepository;
         public PublicacaoController(ILogger<PublicacaoController> logger, 
-            IPublicacaoRepository publicacaoRepository, IUsuarioRepository usuarioRepository) : base(usuarioRepository)
+            IPublicacaoRepository publicacaoRepository, IUsuarioRepository usuarioRepository,
+            IComentarioRepository comentarioRepository, ICurtidaRepository curtidaRepository) : base(usuarioRepository)
         {
             _logger = logger;
             _publicacaoRepository = publicacaoRepository;
+            _comentarioRepository = comentarioRepository;
+            _curtidaRepository = curtidaRepository;
         }
 
         [HttpPost]
@@ -57,6 +62,47 @@ namespace DevagramCSharp.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, new ErrorResponseDto()
                 {
                     Descricao = "Ocorreu o seguinte erro:" + ex.Message,
+                    Status = StatusCodes.Status500InternalServerError
+                });
+            }
+        }
+
+        [HttpGet]
+        [Route("feed")]
+        public IActionResult FeedHome()
+        {
+            try
+            {
+                List<PublicacaoFeedRespostaDto> feed = _publicacaoRepository.GetPublicacoesFeed(ReadToken().Id);
+
+                foreach (PublicacaoFeedRespostaDto feedResposta in feed)
+                {
+                    Usuario usuario = _usuarioRepository.GetUsuarioPorId(feedResposta.IdUsuario);
+                    UsuarioRespostaDto usuarioRespostaDto = new UsuarioRespostaDto()
+                    {
+                        Nome = usuario.Nome,
+                        Avatar = usuario.FotoPerfil,
+                        IdUsuario = usuario.Id
+                    };
+
+                    feedResposta.Usuario = usuarioRespostaDto;
+
+                    List<Comentario> comentarios = _comentarioRepository.GetCOmentarioPorPublicacao(feedResposta.IdPublicacao);
+                    feedResposta.Comentarios = comentarios;
+
+                    List<Curtida> curtidas = _curtidaRepository.GetCurtidaPorPublicacao(feedResposta.IdPublicacao);
+                    feedResposta.Curtidas = curtidas;
+
+                }
+
+                return Ok(feed);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Erro ao carregar Feed de Notícias");
+                return StatusCode(StatusCodes.Status500InternalServerError, new ErrorResponseDto()
+                {
+                    Descricao = "Erro ao carregar Feed de Notícias" + ex.Message,
                     Status = StatusCodes.Status500InternalServerError
                 });
             }

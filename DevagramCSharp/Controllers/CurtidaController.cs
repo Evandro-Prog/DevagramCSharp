@@ -30,6 +30,7 @@ namespace DevagramCSharp.Controllers
                     if (curtida != null)
                     {
                         _curtidaRepository.Descurtir(curtida);
+                        return Ok("Você deixou de curtir a publicação.");
                     }
                     else
                     {
@@ -39,16 +40,16 @@ namespace DevagramCSharp.Controllers
                             IdUsuario = ReadToken().Id
                         };
                         _curtidaRepository.Curtir(curtidanova);
+                        return Ok("Curtida realizada com sucesso");
                     }                   
 
                 }
                 else
                 {
                     _logger.LogError("Requisição de curtir está vazia.");
-                    return BadRequest("Requisição de curtir está vazia.");
+                    return BadRequest("Requisição de curtir está vazia.");             
                 }
-
-                return Ok("Curtida realizada com sucesso");
+                
             }
             catch (Exception ex)
             {
