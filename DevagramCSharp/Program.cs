@@ -24,6 +24,7 @@ builder.Services.AddScoped<IUsuarioRepository, UsuarioRepositoryImpl>();
 builder.Services.AddScoped<ISeguidorRepository,  SeguidorRepositoryImpl>();
 builder.Services.AddScoped<IPublicacaoRepository, PublicacaorepositoryImpl>();
 builder.Services.AddScoped<IComentarioRepository, ComentarioRepositoryImpl>();
+builder.Services.AddScoped<ICurtidaRepository, CurtidaRepositoryImpl>();
 
 
 //Criação da chave JWT

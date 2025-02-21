@@ -47,7 +47,7 @@ using Microsoft.AspNetCore.Authorization;
 			}
 
 		[HttpPut]
-		public IActionResult AtualizarUsuario([FromForm] UsuarioRequisicaoDto usuariodto)
+		public IActionResult AtualizarUsuario([FromForm] UsuarioRequisicaoDto usuariodto) 
 		{
 			try
 			{

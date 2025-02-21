@@ -12,29 +12,29 @@ namespace DevagramCSharp.Repository.Impl
             _context = context;
         }
 
-        public void AtualizarUsuario(Usuario usuario)
+        public void AtualizarUsuario(Usuario usuario) // Atualiza dados do usuario logado
         {
             _context.Update(usuario);
             _context.SaveChanges();
         }
 
-        public Usuario GetUsuarioPorId(int id)
+        public Usuario GetUsuarioPorId(int id) // busca usuario por ID
         {
             return _context.Usuarios.FirstOrDefault(u => u.Id == id);
         }
 
-        public Usuario GetUsuarioPorLoginSenha(string email, string senha)
+        public Usuario GetUsuarioPorLoginSenha(string email, string senha) // procura usuario no banco e realiza o login
         {
             return _context.Usuarios.FirstOrDefault(u => u.Email == email && u.Senha == senha);
         }
 
-        public void Salvar(Usuario usuario)
+        public void Salvar(Usuario usuario) // cria usuario no sistema
         {
             _context.Add(usuario);
             _context.SaveChanges();
         }
 
-        public bool VerificarEmail(string email)
+        public bool VerificarEmail(string email) // verifica se já existe email cadastrado no sistema
         {
             return _context.Usuarios.Any(u => u.Email == email);
         }
