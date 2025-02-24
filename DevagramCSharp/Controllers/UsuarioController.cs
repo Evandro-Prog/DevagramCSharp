@@ -13,13 +13,19 @@ using Microsoft.AspNetCore.Authorization;
 		[Route("api/[controller]")]
 		public class UsuarioController : BaseController
 		{
-			public readonly ILogger<UsuarioController> _logger;			
+			private readonly ILogger<UsuarioController> _logger;	
+			private readonly IPublicacaoRepository _publicacaoRepository;
+			private readonly ISeguidorRepository _seguidorRepository;
 
 			public UsuarioController(ILogger<UsuarioController> logger, 
-				IUsuarioRepository usuarioRepository) : base(usuarioRepository)
+				IUsuarioRepository usuarioRepository, IPublicacaoRepository publicacaoRepository,
+                ISeguidorRepository seguidorRepository) : base(usuarioRepository)
 			{
-				_logger = logger;				
-			}
+				_logger = logger;
+				_publicacaoRepository = publicacaoRepository;
+				_seguidorRepository = seguidorRepository;
+
+            }
 
 			[HttpGet]        
 			public IActionResult ObterUsuario()
@@ -60,14 +66,14 @@ using Microsoft.AspNetCore.Authorization;
 					{
 						erros.Add("Nome inválido");
 					}
-                    if (erros.Count > 0)
-                    {
-                        return BadRequest(new ErrorResponseDto()
-                        {
-                            Status = StatusCodes.Status400BadRequest,
-                            Erros = erros
-                        });
-                    }
+					if (erros.Count > 0)
+					{
+						return BadRequest(new ErrorResponseDto()
+						{
+							Status = StatusCodes.Status400BadRequest,
+							Erros = erros
+						});
+					}
 					else
 					{
 						CosmicService cosmicService = new CosmicService();
@@ -78,10 +84,10 @@ using Microsoft.AspNetCore.Authorization;
 						_usuarioRepository.AtualizarUsuario(usuario);
 						
 					}                    
-                }
+				}
 
-                return Ok("Infomações atualizadas.");
-            }
+				return Ok("Infomações atualizadas.");
+			}
 			catch (Exception ex)
 			{
 				_logger.LogError("Erro ao salvar usuário");
@@ -154,7 +160,7 @@ using Microsoft.AspNetCore.Authorization;
 
 					 return Ok("Usuário cadastrado!");
 					}
-				     catch (Exception ex)
+					 catch (Exception ex)
 					{
 						_logger.LogError("Erro ao salvar usuário");
 						return StatusCode(StatusCodes.Status500InternalServerError, new ErrorResponseDto()
@@ -165,6 +171,77 @@ using Microsoft.AspNetCore.Authorization;
 				}				
 
 			}
+		[HttpGet]
+		[Route("pesquisaid")]
+		public IActionResult PesquisarUsaurioID(int idUsuario)
+		{
+			try
+			{
+				Usuario usuario = _usuarioRepository.GetUsuarioPorId(idUsuario);
+				int qtdepublicacoes = _publicacaoRepository.GetQtdePublicacoes(idUsuario);
+				int qtdeseguidores = _seguidorRepository.GetQtdeSeguidores(idUsuario);
+				int qtdeseguindo = _seguidorRepository.GetQtdeSeguindo(idUsuario);
 
+				return Ok(new UsuarioRespostaDto
+				{
+					Nome = usuario.Nome,
+					Email = usuario.Email,
+					Avatar = usuario.FotoPerfil,
+					IdUsuario = usuario.Id,
+					QtdePublicacoes = qtdepublicacoes,
+					QtdeSeguidores = qtdeseguidores,
+					QtdeSeguindo = qtdeseguindo
+				});
+			}
+			catch(Exception ex)
+			{
+                _logger.LogError("Erro obter dados do usuário pesquisado.");
+                return StatusCode(StatusCodes.Status500InternalServerError, new ErrorResponseDto()
+                {
+                    Descricao = "Erro obter dados do usuário pesquisado:" + ex.Message,
+                    Status = StatusCodes.Status500InternalServerError
+                });
+            }
 		}
+        [HttpGet]
+        [Route("pesquisanome")]
+        public IActionResult PesquisarUsaurioNome(string nome)
+        {
+            try
+            {
+                List <Usuario> usuarios = _usuarioRepository.GetUsuarioNome(nome);
+				List<UsuarioRespostaDto> usuariosresposta = new List<UsuarioRespostaDto>();
+
+				foreach(Usuario usuario in usuarios)
+				{
+                    int qtdepublicacoes = _publicacaoRepository.GetQtdePublicacoes(usuario.Id);
+                    int qtdeseguidores = _seguidorRepository.GetQtdeSeguidores(usuario.Id);
+                    int qtdeseguindo = _seguidorRepository.GetQtdeSeguindo(usuario.Id);
+
+					usuariosresposta.Add(new UsuarioRespostaDto
+					{
+						Nome = usuario.Nome,
+						Email = usuario.Email,
+						Avatar = usuario.FotoPerfil,
+						IdUsuario = usuario.Id,
+						QtdePublicacoes = qtdepublicacoes,
+						QtdeSeguidores = qtdeseguidores,
+						QtdeSeguindo = qtdeseguindo
+					});
+                    
+                };				
+
+                return Ok(usuariosresposta);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Erro obter dados do usuário pesquisado.");
+                return StatusCode(StatusCodes.Status500InternalServerError, new ErrorResponseDto()
+                {
+                    Descricao = "Erro obter dados do usuário pesquisado:" + ex.Message,
+                    Status = StatusCodes.Status500InternalServerError
+                });
+            }
+        }
+    }
 	}

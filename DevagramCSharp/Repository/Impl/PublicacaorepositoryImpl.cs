@@ -29,6 +29,26 @@ namespace DevagramCSharp.Repository.Impl
             return feed.ToList();
         }
 
+        public List<PublicacaoFeedRespostaDto> GetPublicacoesFeedUsuario(int idUsuario)
+        {
+            var feedusuario =
+                from publicacoes in _context.Publicacoes
+                where publicacoes.IdUsuario == idUsuario
+                select new PublicacaoFeedRespostaDto
+                {
+                    IdPublicacao = publicacoes.Id,
+                    Descricao = publicacoes.Descricao,
+                    Foto = publicacoes.Foto,
+                    IdUsuario = publicacoes.IdUsuario,
+                };
+            return feedusuario.ToList();    
+        }
+
+        public int GetQtdePublicacoes(int idUsuario)
+        {
+            return _context.Publicacoes.Count(p => p.IdUsuario == idUsuario); 
+        }
+
         public void publicar(Publicacao publicacao)
         {
             _context.Add(publicacao);
